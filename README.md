@@ -26,14 +26,14 @@ eoc 2 -p
 
 Return codes of the command :
 
-0 --> report is produce well
-1 --> arg is not numeric
-2 --> oc client is not present
-3 --> not logging to openshift
-4 --> md5sum is not present
-5 --> Another eoc process is running
-6 --> purge is done
-7 --> no arg present
+  0 --> report is produce well
+  1 --> arg is not numeric
+  2 --> oc client is not present
+  3 --> not logging to openshift
+  4 --> md5sum is not present
+  5 --> Another eoc process is running
+  6 --> purge is done
+  7 --> no arg present
 
 
 
