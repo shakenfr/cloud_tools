@@ -3,9 +3,11 @@ binaries for openshift/kubernetes reporting
 
 
 
-eoc is a tool for openshift reporting, It needs oc client and md5sum in your environnement.
+eoc is a tool for openshift reporting, It needs oc client and md5sum in your environment.
+ekubectl is a tool for kubernetes reporting, It need kubectl client and md5sum in your environment
 
-To install just put it inside /usr/bin folder
+
+Install just put it inside /usr/bin folder
 
 
 
@@ -16,17 +18,17 @@ second arg can be only -p after first arg is the number of days
 
 exemples :
 
-eoc 10
+eoc 10     ekubectl 10
 
   ==> It will produce a 10 last days report
 
-eoc -p
+eoc -p     ekubectl -p
 
-  ==> It produces no report but purge the eoc database
+  ==> It produces no report but purge the eoc/ekubectl database
   
-eoc 2 -p
+eoc 2 -p   ekubectl 2 -p
 
-  ==> It produces a report of the 2 last days and purge the eoc database
+  ==> It produces a report of the 2 last days and purge the eoc/ekubectl database
 
 
 Return codes of the command :
