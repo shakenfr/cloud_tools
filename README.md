@@ -51,9 +51,14 @@ Return codes of the command :
 
 
 
-eoc produce a report of changes done in the arg days before
+eoc produces a report of changes done in the arg days before
 
 It handles all this objects
 It check errors too
 
 deploy, replicasets, statefulsets, hpa, jobs, cronjobs, imagestreams, pods, services, routes, configmaps, secrets, replicationcontrolers
+
+
+ekubectl produces a report of this type of objects :
+
+deploy,  statefulsets, jobs, cronjobs, pods, services, ingresses,ingressroute, configmaps, secrets , replicationcontroler
