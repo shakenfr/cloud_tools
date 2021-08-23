@@ -2,14 +2,15 @@
 arg1=$1
 PID=$$
 arg2=$2
+EXCLUD=0
 ps -ef|grep -v grep|grep "ekubectl "
 if [ $? -eq 0 ];then
-	echo "ekubectl v1.4 already running...exiting"
+	echo "ekubectl v1.5 already running...exiting"
 	exit 5
 
 fi
 if [[ "$arg1" == "" ]];then
-	echo "ekubectl v1.4"
+	echo "ekubectl v1.5"
 	echo "Arg is absent"
 	exit 7
 fi
@@ -21,10 +22,10 @@ fi
 if [[ "$arg1" =~ ^[0-9]+$ ]];then
 	echo
 else
-	echo "ekubectl v1.4"
+	echo "ekubectl v1.5"
 	echo "Arg is not numeric . Arg is the number of days . ex: 1 for one day, 7 for seven days"
 	echo "You can use -p argument as 1st arg or 2nd arg to purge database"
-	echo "You can use -e argument as 1st arg or 2nd arg to exclude cronjob object from report"
+	echo "You can use -e argument as 1st arg or 2nd arg to exclude cronjobs and jobs from report"
 	exit 1
 fi
 if [ "$arg2" == "-p" ];then
@@ -36,7 +37,7 @@ fi
 version()
 {
 	echo "----------" |tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
-	echo "ekubectl v1.4 "|tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
+	echo "ekubectl v1.5 "|tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
 	echo " kubernetes objects to check : deploy,  statefulsets, jobs, cronjobs, pods, services, ingresses,ingressroute, configmaps, secrets , replicationcontroler"|tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
 	echo "----------" |tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
 
@@ -1090,12 +1091,14 @@ if [[ $arg1 == +([0-9]) ]]; then
 		init
 		kubestatefullsets
 		display
-		init
-		kubejobs
-		display
-		init
-		kubecronjobs
-		display
+		if [ "$EXCLUD" != "1" ];then
+		  init
+		  kubejobs
+		  display
+		  init
+		  kubecronjobs
+		  display
+		fi
 		init
 		kubepods
 		display
