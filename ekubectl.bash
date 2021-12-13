@@ -3,14 +3,10 @@ arg1=$1
 PID=$$
 arg2=$2
 EXCLUD=0
-ps -ef|grep -v grep|grep "ekubectl "
-if [ $? -eq 0 ];then
-	echo "ekubectl v1.5 already running...exiting"
-	exit 5
+datef=`date +%Y%m%d_%H%M%S`
 
-fi
 if [[ "$arg1" == "" ]];then
-	echo "ekubectl v1.5"
+	echo "ekubectl v1.6"
 	echo "Arg is absent"
 	exit 7
 fi
@@ -22,7 +18,7 @@ fi
 if [[ "$arg1" =~ ^[0-9]+$ ]];then
 	echo
 else
-	echo "ekubectl v1.5"
+	echo "ekubectl v1.6"
 	echo "Arg is not numeric . Arg is the number of days . ex: 1 for one day, 7 for seven days"
 	echo "You can use -p argument as 1st arg or 2nd arg to purge database"
 	echo "You can use -e argument as 1st arg or 2nd arg to exclude cronjobs and jobs from report"
@@ -34,10 +30,11 @@ fi
 if [ "$arg2" == "-e" ];then
 	EXCLUD=1
 fi
+
 version()
 {
 	echo "----------" |tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
-	echo "ekubectl v1.5 "|tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
+	echo "ekubectl v1.6 "|tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
 	echo " kubernetes objects to check : deploy,  statefulsets, jobs, cronjobs, pods, services, ingresses,ingressroute, configmaps, secrets , replicationcontroler"|tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
 	echo "----------" |tee -a /tmp/report.log.$PID |tee -a /tmp/reportfull.log.$PID
 
@@ -333,6 +330,7 @@ kubeconfigmaps()
 
         wcf=`wc -l /tmp/ekubectl_full.log.$PID|cut -d " " -f1`
 	if [ -f /var/tmp/ekubectl_database/${tenant}.configmaps.lasttime ];then
+		cat /var/tmp/ekubectl_database/${tenant}.configmaps.lasttime >/var/tmp/ekubectl_database/${tenant}.configmaps.time_$datef
 		mv /var/tmp/ekubectl_database/${tenant}.configmaps.lasttime /var/tmp/ekubectl_database/${tenant}.configmaps.toanalyse
 		firstrun="0"
 	else
@@ -365,6 +363,24 @@ kubeconfigmaps()
 		echo " ">>/tmp/preparse.$PID
 		echo " $i WARNING(S) Raise for coherence verification">>/tmp/preparse.$PID
 	fi
+	ls /var/tmp/ekubectl_database/${tenant}.configmaps.* >/tmp/list.$PID
+	while read fil
+	do
+		md5sum $fil >>/tmp/md5verif.$PID
+		md5sum $fil |cut -d " " -f1 >>/tmp/onlymd5verif.$PID
+
+	done</tmp/list.$PID
+	resulta=`cat /tmp/onlymd5verif.$PID|sort |uniq -c|wc -l >/tmp/res.$PID`
+	if [ `cat /tmp/res.$PID` != "1" ];then
+		echo " ">>/tmp/preparse.$PID
+		echo " 1 WARNING Raises for history coherence verification" >>/tmp/preparse.$PID
+		echo " ">>/tmp/preparse.$PID
+		echo "check history files : ">>/tmp/preparse.$PID
+		echo " ">>/tmp/preparse.$PID
+		cat /tmp/md5verif.$PID >>/tmp/preparse.$PID
+	fi
+	rm -f /tmp/res.$PID
+	rm -f /tmp/list.$PID
         wcd=`wc -l /tmp/ekubectl_d.log.$PID|cut -d " " -f1`
         wcy=`wc -l /tmp/ekubectl_y.log.$PID|cut -d " " -f1`
         wcm=`wc -l /tmp/ekubectl_m.log.$PID|cut -d " " -f1`   
@@ -422,6 +438,8 @@ kubesecrets()
         done</tmp/ekubectl_full.log.$PID
 	wcf=`wc -l /tmp/ekubectl_full.log.$PID|cut -d " " -f1`
         if [ -f /var/tmp/ekubectl_database/${tenant}.secrets.lasttime ];then
+		cat /var/tmp/ekubectl_database/${tenant}.secrets.lasttime >/var/tmp/ekubectl_database/${tenant}.secrets.time_$datef
+
                 mv /var/tmp/ekubectl_database/${tenant}.secrets.lasttime /var/tmp/ekubectl_database/${tenant}.secrets.toanalyse
                 firstrun="0"
         else
@@ -452,7 +470,24 @@ kubesecrets()
                 echo " ">>/tmp/preparse.$PID
                 echo " $i WARNING(S) Raise for coherence verification">>/tmp/preparse.$PID
         fi
+	ls /var/tmp/ekubectl_database/${tenant}.secrets.* >/tmp/lists.$PID
+        while read fil
+        do
+                md5sum $fil >>/tmp/md5verifs.$PID
+                md5sum $fil |cut -d " " -f1 >>/tmp/onlymd5verifs.$PID
 
+        done</tmp/lists.$PID
+        resulta=`cat /tmp/onlymd5verifs.$PID|sort |uniq -c|wc -l >/tmp/res.$PID`
+        if [ `cat /tmp/res.$PID` != "1" ];then
+                echo " ">>/tmp/preparse.$PID
+                echo " 1 WARNING Raises for history coherence verification" >>/tmp/preparse.$PID
+                echo " ">>/tmp/preparse.$PID
+                echo "check history files : ">>/tmp/preparse.$PID
+                echo " ">>/tmp/preparse.$PID
+                cat /tmp/md5verifs.$PID >>/tmp/preparse.$PID
+        fi
+        rm -f /tmp/res.$PID
+	rm -f /tmp/lists.$PID
         wcf=`wc -l /tmp/ekubectl_full.log.$PID|cut -d " " -f1`
         wcd=`wc -l /tmp/ekubectl_d.log.$PID|cut -d " " -f1`
         wcy=`wc -l /tmp/ekubectl_y.log.$PID|cut -d " " -f1`   
@@ -1125,7 +1160,9 @@ fi
 cat /tmp/report.log.$PID >/tmp/report.log
 cat /tmp/reportfull.log.$PID >/tmp/reportfull.log
 #rm -f /tmp/*.$PID
-rm -f /var/tmp/ekubectl_database/*.toanalyse
+rm -f /var/tmp/ekubectl_database/*.toanalyse 
+rm -f /tmp/md5*.$PID
+rm -f /tmp/onlymd5*.$PID
 exit 0
 
 
